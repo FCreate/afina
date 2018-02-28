@@ -63,7 +63,7 @@ if ("${AFINA_VERSION}" MATCHES "^v[0-9]+\\.[0-9]+\\.[0-9]+")
     string(REGEX REPLACE "^v[0-9]+\\.([0-9]+)\\..*" "\\1" VERSION_MINOR "${AFINA_VERSION}")
     string(REGEX REPLACE "^v[0-9]+\\.[0-9]+\\.([0-9]+).*" "\\1" VERSION_PATCH "${AFINA_VERSION}")
 else()
-    message(FATAL_ERROR "Version has wrong format, check major/minor/patch parts of version")
+    #message(FATAL_ERROR "Version has wrong format, check major/minor/patch parts of version")
 endif()
 
 # additional git part of version
