@@ -4,9 +4,9 @@
 #include <map>
 #include <mutex>
 #include <string>
-#include <list>
+//#include <list>
 #include <afina/Storage.h>
-
+#include "list.cpp"
 namespace Afina {
 namespace Backend {
 
@@ -38,7 +38,8 @@ public:
 private:
     size_t _max_size;
     std::map<std::string, std::string> _backend;
-    std::list<std::string> _backend_list;
+    list<std::string> _backend_list;
+    mutable std::mutex mut;
 };
 
 } // namespace Backend
