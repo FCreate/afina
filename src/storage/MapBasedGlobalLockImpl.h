@@ -4,7 +4,6 @@
 #include <map>
 #include <mutex>
 #include <string>
-//#include <list>
 #include <afina/Storage.h>
 #include "list.cpp"
 namespace Afina {
