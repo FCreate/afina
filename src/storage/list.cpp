@@ -30,7 +30,7 @@ public:
     list(const list &src)
     {
         Element<ElemType> *temp=src.pHead;
-        this->countElem=0;
+        countElem =0;
         for (int i=0;i<src.countElem;i++)
         {
             this->push_back(temp->data);
@@ -49,19 +49,9 @@ public:
     Element<ElemType>* end(){
         return pEnd;
     }
-    void push_front (ElemType data)
-    {
-        Element<ElemType> *temp = new Element<ElemType>;
-        pHead->pred=temp;
-        temp->data=data;
-        temp->next=pHead;
-        temp->pred=nullptr;
-        pHead=temp;
-        countElem++;
-    }
     void push_back(ElemType data)
     {
-        Element<ElemType> *temp = new Element<ElemType>;
+        auto *temp = new Element<ElemType>;
         temp->data = data;
         if (countElem==0)
         {
@@ -72,123 +62,9 @@ public:
             pEnd->next=temp;
             temp->pred = pEnd;
         }
-
         temp->next = nullptr;
-
         pEnd = temp;
         countElem++;
-    }
-
-    void pop_front()
-    {
-        Element<ElemType> *pTemp = pHead;
-        if (countElem==0)
-        {
-            return;
-        }
-        if (countElem == 1)
-        {
-            pHead = nullptr;
-            pEnd = nullptr;
-        }
-        else
-        {
-            pTemp->next->pred = nullptr;
-            pHead = pTemp->next;
-            pHead->pred=nullptr;
-        }
-
-        countElem--;
-        delete pTemp;
-
-    }
-
-    void pop_back()
-    {
-        Element<ElemType> *pTemp = pEnd;
-        pTemp->pred->next = nullptr;
-        pEnd = pTemp->pred;
-        delete pTemp;
-        countElem--;
-    }
-
-    void remove(ElemType element){
-        Element<ElemType> *pTemp = pHead;
-        for (int i=0; i<countElem; i++){
-            if (element==pTemp->data){
-                delElem(i);
-                break;
-            }
-        }
-
-    }
-
-    void delElem(int numb)
-    {
-        Element<ElemType> *pTemp = pHead;
-
-
-        if ((numb>countElem) || (numb<1))  {}
-        else
-        {
-            for(int i=1; i!=numb; i++)
-            {
-                pTemp = pTemp->next;
-            }
-
-            if (pTemp->pred == nullptr)
-            {
-                if (countElem == 1)
-                {
-                    pHead = nullptr;
-                    pEnd = nullptr;
-                }
-                else
-                {
-                    pTemp->next->pred = nullptr;
-                    pHead = pTemp->next;
-                }
-
-                delete pTemp;
-                countElem--;
-                return;
-            }
-
-            if (pTemp->next == nullptr)
-            {
-                pTemp->pred->next = nullptr;
-                pEnd = pTemp->pred;
-                delete pTemp;
-                countElem--;
-                return;
-            }
-
-            if (pTemp->next != nullptr && pTemp->pred != nullptr)
-            {
-                pTemp->pred->next = pTemp->next;
-                pTemp->next->pred = pTemp->pred;
-                delete pTemp;
-                countElem--;
-                return;
-            }
-        }
-    }
-
-    void clear()
-    {
-        while(pHead!=0)
-        {
-
-            Element<ElemType> *pTemp = pHead;
-
-            pHead = pHead->next;
-            if (pHead != nullptr)
-                delete pTemp;
-
-        }
-
-        pHead = nullptr;
-        pEnd = nullptr;
     }
     int size ()
     {
@@ -244,5 +120,21 @@ public:
             delete elem;
             return;
         }
+    }
+    void clear()
+    {
+        while(pHead!=0)
+        {
+
+            Element<ElemType> *pTemp = pHead;
+
+            pHead = pHead->next;
+            if (pHead != nullptr)
+                delete pTemp;
+
+        }
+
+        pHead = nullptr;
+        pEnd = nullptr;
     }
 };
