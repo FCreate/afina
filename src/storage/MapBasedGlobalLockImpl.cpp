@@ -36,7 +36,8 @@ bool MapBasedGlobalLockImpl::Put(const std::string &key, const std::string &valu
                     else{
                         std::string key_for_del = _backend_list.front()->next->key;
                         _now_size-=(key_for_del.size()+_backend_list.front()->next->data.size());
-                        _backend.erase(key_for_del);
+                       //pHead = pHead->next;
+ _backend.erase(key_for_del);
                         _backend_list.remove(_backend_list.front()->next);
 
                     }
