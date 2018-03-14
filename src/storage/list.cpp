@@ -1,6 +1,7 @@
 //
 // Created by micheal on 01.03.18.
 //
+#include <string>
 template <class ElemType>
 struct Element
 {
@@ -8,6 +9,7 @@ public:
     ElemType data;
     Element *next;
     Element *pred;
+    std::string key;
 };
 
 template <class ElemType>
@@ -15,14 +17,14 @@ class list
 {
 private:
     Element<ElemType> *pHead;
-    Element<ElemType> *pPrev;
+    Element<ElemType> *pEnd;
     int countElem;
 public:
 
     list()
     {
         pHead = nullptr;
-        pPrev = nullptr;
+        pEnd = nullptr;
         countElem = 0;
     }
     list(const list &src)
@@ -41,8 +43,11 @@ public:
         clear();
     }
 
-    ElemType front(){
-        return pHead->data;
+    Element<ElemType>* front(){
+        return pHead;
+    }
+    Element<ElemType>* end(){
+        return pEnd;
     }
     void push_front (ElemType data)
     {
@@ -60,17 +65,17 @@ public:
         temp->data = data;
         if (countElem==0)
         {
-            pHead=pPrev=temp;
+            pHead=pEnd=temp;
             temp->pred=nullptr;
         }
         else{
-            pPrev->next=temp;
-            temp->pred = pPrev;
+            pEnd->next=temp;
+            temp->pred = pEnd;
         }
 
         temp->next = nullptr;
 
-        pPrev = temp;
+        pEnd = temp;
         countElem++;
     }
 
@@ -84,7 +89,7 @@ public:
         if (countElem == 1)
         {
             pHead = nullptr;
-            pPrev = nullptr;
+            pEnd = nullptr;
         }
         else
         {
@@ -100,9 +105,9 @@ public:
 
     void pop_back()
     {
-        Element<ElemType> *pTemp = pPrev;
+        Element<ElemType> *pTemp = pEnd;
         pTemp->pred->next = nullptr;
-        pPrev = pTemp->pred;
+        pEnd = pTemp->pred;
         delete pTemp;
         countElem--;
     }
@@ -136,7 +141,7 @@ public:
                 if (countElem == 1)
                 {
                     pHead = nullptr;
-                    pPrev = nullptr;
+                    pEnd = nullptr;
                 }
                 else
                 {
@@ -152,7 +157,7 @@ public:
             if (pTemp->next == nullptr)
             {
                 pTemp->pred->next = nullptr;
-                pPrev = pTemp->pred;
+                pEnd = pTemp->pred;
                 delete pTemp;
                 countElem--;
                 return;
@@ -183,10 +188,61 @@ public:
         }
 
         pHead = nullptr;
-        pPrev = nullptr;
+        pEnd = nullptr;
     }
     int size ()
     {
         return countElem;
+    }
+    void set_end (Element<ElemType>* elem) {
+        //put to the end
+        if (elem == pEnd) {
+            return;
+        }
+        else if (elem == pHead) {
+
+            pHead = elem->next;
+            pHead->pred = nullptr;
+
+            elem->pred=pEnd;
+            elem->next= nullptr;
+            pEnd->next= elem;
+            pEnd = elem;
+        }
+        else {
+            return;
+        }
+    }
+    void remove(Element<ElemType>* elem){
+        if (countElem==0){
+            return;
+        }
+        if (countElem==1){
+            countElem--;
+            pHead=pEnd= nullptr;
+            delete elem;
+            return;
+        }
+        if (elem==pEnd){
+            pEnd = pEnd->pred;
+            pEnd->next = nullptr;
+            countElem--;
+            delete elem;
+            return;
+        }
+        if (elem==pHead){
+            pHead=pHead->next;
+            pHead->pred = nullptr;
+            countElem--;
+            delete elem;
+            return;
+        }
+        else{
+            elem->pred->next = elem->next;
+            elem->next->pred = elem->pred;
+            countElem--;
+            delete elem;
+            return;
+        }
     }
 };
