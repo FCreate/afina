@@ -123,15 +123,12 @@ public:
     }
     void clear()
     {
-        while(pHead!=0)
+        Element<ElemType> *pTemp = pHead;
+        while(pTemp)
         {
-
-            Element<ElemType> *pTemp = pHead;
-
-            pHead = pHead->next;
-            if (pHead != nullptr)
-                delete pTemp;
-
+            Element<ElemType> *nextnode = pTemp->next;
+            delete pTemp;
+            pTemp = nextnode;
         }
 
         pHead = nullptr;

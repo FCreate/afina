@@ -5,10 +5,9 @@ namespace Backend {
 
 // See MapBasedGlobalLockImpl.h
 bool MapBasedGlobalLockImpl::Put(const std::string &key, const std::string &value) {
-        mut.lock();
+        std::lock_guard<std::mutex> lck(mut);
         size_t size_element = key.size() + value.size();
         if (size_element>_max_size){
-            mut.unlock();
             return false;
         }
             auto flag = _backend.find(key);
@@ -23,7 +22,6 @@ bool MapBasedGlobalLockImpl::Put(const std::string &key, const std::string &valu
                 _backend_list.end()->key = key;
                 _backend[_backend_list.end()->key]=_backend_list.end();
                 _now_size+=size_element;
-                mut.unlock();
                 return true;
 
             }
@@ -47,12 +45,9 @@ bool MapBasedGlobalLockImpl::Put(const std::string &key, const std::string &valu
                 _now_size =_now_size+value.size() - flag->second->data.size();
                 flag->second->data = value;
                 _backend_list.set_end(flag->second);
-
-                mut.unlock();
                 return true;
             }
             else{
-            mut.unlock();
             return false;
         }
     }
@@ -60,10 +55,10 @@ bool MapBasedGlobalLockImpl::Put(const std::string &key, const std::string &valu
 
 // See MapBasedGlobalLockImpl.h
 bool MapBasedGlobalLockImpl::PutIfAbsent(const std::string &key, const std::string &value) {
-        mut.lock();
+        std::lock_guard<std::mutex> lck(mut);
         size_t size_element = key.size() + value.size();
         if (size_element>_max_size){
-            mut.unlock();
+            
             return false;
         }
         auto flag = _backend.find(key);
@@ -78,23 +73,24 @@ bool MapBasedGlobalLockImpl::PutIfAbsent(const std::string &key, const std::stri
             _backend_list.end()->key = key;
             _backend[_backend_list.end()->key]=_backend_list.end();
             _now_size+=size_element;
-            mut.unlock();
+            
             return true;
 
         }
         else{
-            mut.unlock();
+            
             return false;
         }
     }
 
 // See MapBasedGlobalLockImpl.h
 bool MapBasedGlobalLockImpl::Set(const std::string &key, const std::string &value) {
-        mut.lock();
+        std::lock_guard<std::mutex> lck(mut);
+        
         size_t size_element = key.size() + value.size();
         auto flag = _backend.find(key);
         if (size_element>_max_size) {
-            mut.unlock();
+            
             return false;
         }
 
@@ -118,50 +114,49 @@ bool MapBasedGlobalLockImpl::Set(const std::string &key, const std::string &valu
             _now_size =_now_size+value.size() - flag->second->data.size();
             flag->second->data = value;
             _backend_list.set_end(flag->second);
-            mut.unlock();
+            
             return true;
         }
         else{
-            mut.unlock();
+            
             return false;
         }
     }
 
 // See MapBasedGlobalLockImpl.h
 bool MapBasedGlobalLockImpl::Delete(const std::string &key) {
-
-        mut.lock();
+        std::lock_guard<std::mutex> lck(mut);
+        
         auto flag = _backend.find(key);
         if (flag!=_backend.end()){
             size_t size_element = flag->second->data.size()+flag->second->key.size();
             _now_size -=size_element;
             _backend.erase(key);
             _backend_list.remove(flag->second);
-            mut.unlock();
+            
             return true;
         }
         else{
-            mut.unlock();
+            
             return false;
         }
     }
 
 // See MapBasedGlobalLockImpl.h
 bool MapBasedGlobalLockImpl::Get(const std::string &key, std::string &value) const {
-        mut.lock();
+        std::lock_guard<std::mutex> lck(mut);
         auto flag = _backend.find(key);
         if (flag ==_backend.end()){
-            mut.unlock();
+            
             return false;
         }
         else{
 
             value= flag->second->data;
             _backend_list.set_end(flag->second);
-            mut.unlock();
+            
             return true;
         }
     }
-
 } // namespace Backend
 } // namespace Afina
