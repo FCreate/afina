@@ -236,8 +236,8 @@ void ServerImpl::RunAcceptor(int) {
             LOCK_CONNECTIONS_MUTEX;
             pthread_t client_thread = 0;
             //Make pair of ServerImpl and client_socket
-            auto take_argss = std::make_pair(this, client_socket);
-            if (pthread_create(&client_thread, NULL, ServerImpl::RunAcceptorProxyConnection, &take_argss) < 0)	{
+            auto args = std::make_pair(this, client_socket);
+            if (pthread_create(&client_thread, NULL, ServerImpl::RunAcceptorProxyConnection, &args) < 0)	{
                 throw std::runtime_error("The thread can't run");
             }
             std::cout<<"The client thread has run"<<std::endl;
