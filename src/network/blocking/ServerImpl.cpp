@@ -20,9 +20,9 @@
 #include <afina/Storage.h>
 
 
-#define NETWORK_DEBUG(X) std::cserver_out << "network debug: " << X << std::endl
+#define NETWORK_DEBUG(X) std::cout << "network debug: " << X << std::endl
 #define NETWORK_PROCESS_DEBUG(PID, MESSAGE) NETWORK_DEBUG("Process PID = " << PID << ": " << MESSAGE)
-#define NETWORK_PROCESS_MESSAGE(MESSAGE) std::cserver_out << "Process PID = " << pthread_self() << ": " << MESSAGE
+#define NETWORK_PROCESS_MESSAGE(MESSAGE) std::cout << "Process PID = " << pthread_self() << ": " << MESSAGE
 #define LOCK_CONNECTIONS_MUTEX std::lock_guard<std::mutex> lock(connections_mutex)
 
 #define READING_PORTION 1024
@@ -54,7 +54,7 @@ void *ServerImpl::RunAcceptorProxyConnection(void *p){
 }
 // See Server.h
 ServerImpl::ServerImpl(std::shared_ptr<Afina::Storage> ps) :
-        Server(ps), server_socket(-1), running(false), finished(false), max_workers(0), listen_port(0) {}
+        Server(ps), server_socket(-1), running(false), finished(false), max_workers(5), listen_port(0) {}
 
 // See Server.h
 ServerImpl::~ServerImpl() {
@@ -63,7 +63,7 @@ ServerImpl::~ServerImpl() {
 
 // See Server.h
 void ServerImpl::Start(uint32_t port, uint16_t n_workers) {
-    std::cserver_out << "network debug: " << __PRETTY_FUNCTION__ << std::endl;
+    std::cout << "network debug: " << __PRETTY_FUNCTION__ << std::endl;
 
     // If a client closes a connection, this will generally produce a SIGPIPE
     // signal that will kill the process. We want to ignore this signal, so send()
@@ -145,13 +145,13 @@ void ServerImpl::Stop() {
 
 // See Server.h
 void ServerImpl::Join() {
-    std::cserver_out << "network debug: " << __PRETTY_FUNCTION__ << std::endl;
+    std::cout << "network debug: " << __PRETTY_FUNCTION__ << std::endl;
     pthread_join(accept_thread, 0);
 }
 
 // See Server.h
 void ServerImpl::RunAcceptor(int) {
-    std::cserver_out << "network debug: " << __PRETTY_FUNCTION__ << std::endl;
+    std::cout << "network debug: " << __PRETTY_FUNCTION__ << std::endl;
 
     // For IPv4 we use struct sockaddr_in:
     // struct sockaddr_in {
@@ -209,7 +209,7 @@ void ServerImpl::RunAcceptor(int) {
     std::memset(&client_addr, 0, sizeof(client_addr));
     socklen_t sinSize = sizeof(sockaddr_in);
     while (running.load()) {
-        std::cserver_out << "DEBUG Listen incoming connection" << std::endl;
+        std::cout << "DEBUG Listen incoming connection" << std::endl;
 
         //Accept incoming connections, and block it, until the task haven't done
         //Accept function do it
@@ -219,14 +219,15 @@ void ServerImpl::RunAcceptor(int) {
             close(server_socket);
             throw std::runtime_error("Socket accept() failed.");
         }
-        std::cserver_out<<"Connection accepted"<<std::endl;
+        std::cout<<"Connection accepted"<<std::endl;
         //Check max_workers limit
+        std::cout<<"Max workers  "<<max_workers<<std::endl;
         if (connections.size() >= max_workers) {
             std::string message = "ERROR ON SERVER There is max_workers limit is achieved";
             if (send(client_socket, message.data(), message.size(), 0) <= 0) {
                 close(client_socket); //Closes only client socket
             }
-            std::cserver_out<<"Max workers limit has been achieved"<<std::endl;
+            std::cout<<"Max workers limit has been achieved"<<std::endl;
             continue;
         }
 
@@ -239,7 +240,7 @@ void ServerImpl::RunAcceptor(int) {
             if (pthread_create(&client_thread, NULL, ServerImpl::RunAcceptorProxyConnection, &take_argss) < 0)	{
                 throw std::runtime_error("The thread can't run");
             }
-            std::cserver_out<<"The client thread has run"<<std::endl;
+            std::cout<<"The client thread has run"<<std::endl;
             connections.insert(client_thread);
             client_sockets.insert(client_socket);
         }
@@ -251,7 +252,7 @@ void ServerImpl::RunAcceptor(int) {
 
 // See Server.h
 void ServerImpl::RunConnection(int client_socket) {
-    std::cserver_out << "network debug: " << __PRETTY_FUNCTION__ << std::endl;
+    std::cout << "network debug: " << __PRETTY_FUNCTION__ << std::endl;
     // TODO: All connection work is here
     Afina::Protocol::Parser parser;
     std::string prev_string;
