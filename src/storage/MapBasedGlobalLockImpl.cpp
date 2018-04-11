@@ -64,7 +64,7 @@ bool MapBasedGlobalLockImpl::PutIfAbsent(const std::string &key, const std::stri
         }
         auto flag = _backend.find(key);
         if ((flag==_backend.end())&&(_now_size+size_element<=_max_size)){
-            while(_now_size+value.size() - flag->second->data.size()>_max_size){
+            while(_now_size+size_element >_max_size){
                 std::string key_for_del = _backend_list.front()->key;
                 _now_size-=(key_for_del.size()+_backend_list.front()->data.size());
                 _backend.erase(key_for_del);
