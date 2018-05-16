@@ -103,22 +103,29 @@ void ServerImpl::Start(uint32_t port, uint16_t n_workers) {
     // Note that, in this particular example, creating a "server thread" is redundant,
     // since there will only be one server thread, and the program's main thread (the
     // one running main()) could fulfill this purpose.
+
+    //At this point executor start
     running.store(true);
-    if (pthread_create(&accept_thread, NULL, ServerImpl::RunAcceptorProxy, this)<0) {
-        throw std::runtime_error("Could not create server thread");
-    }
+    //if (pthread_create(&accept_thread, NULL, ServerImpl::RunAcceptorProxy, this)<0) {
+    //    throw std::runtime_error("Could not create server thread");
+    //}
+    executor.Execute(ServerImpl::RunAcceptorProxy, this);
 }
 
 // See Server.h
 void ServerImpl::Stop() {
-    if (!running.load() || finished.load()) { return; }
-    finished.store(true);
+    std::cout << "network debug: " << __PRETTY_FUNCTION__ << std::endl;
+    running.store(false);
+    shutdown(server_socket, SHUT_RDWR);
+    executor.Stop();
+    /*if (!running.load() || finished.load()) { return; }
+    finished.store(true);*/
     // Shutdown listening socket and all client sockets
     // sockets will be closed by their threads
     /*Correcly shutdown listening sockets
      * and client sockets. They must be closed by
      * their threads*/
-    {
+    /*{
         LOCK_CONNECTIONS_MUTEX;
         for (auto it = client_sockets.begin(); it != client_sockets.end(); it++) {
             shutdown(*it, SHUT_RDWR);
@@ -140,13 +147,17 @@ void ServerImpl::Stop() {
     //and make false all atomic and condition variables
     running.store(false);
     finished.store(false);
-    connections_cv.notify_all();
+    connections_cv.notify_all();*/
 }
 
 // See Server.h
 void ServerImpl::Join() {
     std::cout << "network debug: " << __PRETTY_FUNCTION__ << std::endl;
     pthread_join(accept_thread, 0);
+    executor.Join();
+    /*std::cout << "network debug: " << __PRETTY_FUNCTION__ << std::endl;
+    pthread_join(accept_thread, 0);
+    executor.Join();*/
 }
 
 // See Server.h
@@ -222,31 +233,38 @@ void ServerImpl::RunAcceptor(int) {
         std::cout<<"Connection accepted"<<std::endl;
         //Check max_workers limit
         std::cout<<"Max workers  "<<max_workers<<std::endl;
-        if (connections.size() >= max_workers) {
+        /*if (connections.size() >= max_workers) {
             std::string message = "ERROR ON SERVER There is max_workers limit is achieved";
             if (send(client_socket, message.data(), message.size(), 0) <= 0) {
                 close(client_socket); //Closes only client socket
             }
-            std::cout<<"Max workers limit has been achieved"<<std::endl;
-            continue;
-        }
+            if(!executor.Execute(ServerImpl::RunAcceptorProxyConnection, &args)){
+                close(server_socket);
+                close(client_socket);
+                throw std::runtime_error("Could not create connection thread");
+                //std::cout<<"Max workers limit has been achieved"<<std::endl;
+                continue;
+        }*/
 
         //Create new thread for connection
         {
             LOCK_CONNECTIONS_MUTEX;
-            pthread_t client_thread = 0;
-            //Make pair of ServerImpl and client_socket
             auto args = std::make_pair(this, client_socket);
-            if (pthread_create(&client_thread, NULL, ServerImpl::RunAcceptorProxyConnection, &args) < 0)	{
-                throw std::runtime_error("The thread can't run");
+            if(!executor.Execute(ServerImpl::RunAcceptorProxyConnection, &args)) {
+                close(server_socket);
+                close(client_socket);
+                throw std::runtime_error("Could not create connection thread");
             }
-            std::cout<<"The client thread has run"<<std::endl;
-            connections.insert(client_thread);
+            else {
+                std::cout << "SUCCESSFUL CONNECTION" << std::endl;
+            }
+
+            //connections.insert(client_thread);
             client_sockets.insert(client_socket);
         }
     }
 
-    // Cleanup on exit...
+    // Cleanup on Fxit...
     close(server_socket);
 }
 
@@ -321,11 +339,6 @@ void ServerImpl::RunConnection(int client_socket) {
 
     NETWORK_PROCESS_DEBUG(pthread_self(), "This process will be finished");
     close(client_socket);
-    {
-        LOCK_CONNECTIONS_MUTEX;
-        connections.erase(connections.find(pthread_self()));
-        client_sockets.erase(client_sockets.find(client_socket));
-    }
 }
 
 } // namespace Blocking

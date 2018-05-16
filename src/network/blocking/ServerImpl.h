@@ -10,6 +10,7 @@
 #include <afina/network/Server.h>
 #include "./../../protocol/Parser.h"
 #include <afina/execute/Command.h>
+#include <afina/Executor.h>
 
 namespace Afina {
 namespace Network {
@@ -84,6 +85,7 @@ private:
     int server_socket;
     std::atomic<bool> finished;
     std::unordered_set<int> client_sockets;
+    Executor executor;
 
 };
 
