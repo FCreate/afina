@@ -15,7 +15,7 @@
 #include "Connection.cpp"
 
 #include "Utils.h"
-#define MAXEVENTS 100
+#define MAX_EPOLL_EVVENTS 10
 namespace Afina {
     namespace Network {
         namespace NonBlocking {
@@ -54,7 +54,7 @@ namespace Afina {
                 auto data = reinterpret_cast<std::pair<Worker,int>*>(p);
                 try {
                     if (data->first.pStorage.get()== nullptr ) {
-                        std::cerr << "Errror in onrunproxy";
+                        std::cerr << "Errror in onrunproxy. Nullptr has been obtained.";
                     }
                     data->first.OnRun(&data->second);
                 } catch (std::runtime_error &ex) {
@@ -67,25 +67,24 @@ namespace Afina {
             void* Worker::OnRun(void *args) {
                 std::cout << "network debug: " << __PRETTY_FUNCTION__ << std::endl;
                 struct epoll_event ev;
-                struct epoll_event events[MAXEVENTS];
+                struct epoll_event events[MAX_EPOLL_EVVENTS];
                 int events_catched;
                 //Descriptor was returned
-                int epfd = epoll_create(MAXEVENTS);
+                int epfd = epoll_create(MAX_EPOLL_EVVENTS);
                 if (epfd == -1) {
                     throw std::runtime_error("Epoll_create failed");
                 }
-                //Map with Connection and their descriptor
+                //Map with Connection and their descriptors
                 std::map<int,Connection> fd_connections;
-
                 int socket = *reinterpret_cast<int*>(args);
                 ev.data.fd = socket;
                 ev.events = EPOLLEXCLUSIVE | EPOLLIN | EPOLLHUP | EPOLLERR;
-
+                //Register it
                 if (epoll_ctl(epfd, EPOLL_CTL_ADD, ev.data.fd, &ev) == -1) {
                     throw std::runtime_error("Epoll_ctl failed");
                 }
                 while(*running){
-                    if ((events_catched = epoll_wait(epfd, events, MAXEVENTS, -1)) == -1) {
+                    if ((events_catched = epoll_wait(epfd, events, MAX_EPOLL_EVVENTS, -1)) == -1) {
                         if(errno == EINTR)
                         {
                             continue;
@@ -102,7 +101,7 @@ namespace Afina {
                             close(events[i].data.fd);
                             continue;
                         } else if (socket == events[i].data.fd) {
-                            //Some incoming connection
+                            //Some new incoming connection
                             int incoming_fd = -1;
                             while (true) {
                                 try {
@@ -130,13 +129,13 @@ namespace Afina {
                 // Server is stopping. We should proceed the last data, send users message about stopping and then close all connections
                 for (auto &conn : fd_connections){
                     std::cout<<"Stopping server"<<std::endl;
-                    conn.second.cState = Connection::State::kStopping;
+                    conn.second.cState = Connection::State::Stopping;
                     conn.second.handler();
                     fd_connections.erase(conn.first);
                 }
 
             }
-
+            //Subroutine for handle new connections
             int Worker::HandlConnection(int epfd, int socket){
                 struct sockaddr in_addr;
                 socklen_t in_len;
